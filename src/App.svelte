@@ -1,6 +1,6 @@
-<script lang='ts'>
+<script lang="ts">
   import Phaser from 'phaser'
-  import phaserJuice from '../public/phaserJuicePlugin.min.js'
+  import phaserJuice from './vendor/phaserJuicePlugin.min.js'
   import { Game, Scene, Sprite, Spawner, Text } from 'svelte-phaser'
   import LoadingBar from './LoadingBar.svelte'
   import Background from './Background.svelte'
@@ -9,15 +9,20 @@
   import UI from './UI.svelte'
   import { currentLevel, gamepad, lives, sceneRestarting } from './store'
 
-  let game
-  let menu
+  let game: Phaser.Game | undefined = $state()
+  let menu: Phaser.Game | undefined = $state()
 
-  let gameStarted = false
+  let gameStarted = $state(false)
 
-  $: window.game = game
-  $: window.menu = menu
-
-  $: window.ding = $gamepad
+  $effect(() => {
+    ;(window as any).game = game
+  })
+  $effect(() => {
+    ;(window as any).menu = menu
+  })
+  $effect(() => {
+    ;(window as any).ding = $gamepad
+  })
 
   function preload(scene: Phaser.Scene) {
     scene.load.audio('audio/coin', 'assets/coin.mp3')
@@ -96,7 +101,6 @@
     scene.anims.create({
       key: 'anims/coin-impact',
       frames: scene.anims.generateFrameNumbers('textures/coin-impact'),
-      // frameRate: 30,
       duration: 500,
       hideOnComplete: true
     })
@@ -196,13 +200,15 @@
       repeat: -1,
     })
 
-    scene.coinSound = scene.sound.add( 'audio/coin' )
+    ;(scene as any).coinSound = scene.sound.add( 'audio/coin' )
 
     // set collisions on all edges of world except bottom
     scene.physics.world.setBoundsCollision(true, true, true, false)
 
-    if ( scene.scene.settings.data['currentLevel'] ) {
-      $currentLevel = scene.scene.settings.data['currentLevel']
+    const settingsData = scene.scene.settings.data as Record<string, unknown>
+
+    if ( settingsData['currentLevel'] ) {
+      $currentLevel = settingsData['currentLevel'] as number
 
       let levelText = scene.add.text( 800 / 2, -100, `Level ${$currentLevel + 1}`).setDepth( 30 )
 
@@ -210,7 +216,7 @@
 
       scene.time.addEvent({
         delay: 250,
-        callback: () => levelText.body.setVelocityY( 125 )
+        callback: () => (levelText.body as Phaser.Physics.Arcade.Body).setVelocityY( 125 )
       })
 
       scene.time.addEvent({
@@ -219,7 +225,7 @@
       })
     }
 
-    scene.input.gamepad.once('down', ( pad ) => {
+    scene.input.gamepad?.once('down', ( pad: Phaser.Input.Gamepad.Gamepad ) => {
         $gamepad = pad;
     })
 
@@ -227,17 +233,16 @@
   }
 
 
-  let logo: Phaser.GameObjects.Sprite
-  let upgradeShipText: Phaser.GameObjects.Text
+  let logo: Phaser.GameObjects.Sprite | undefined = $state()
+  let upgradeShipText: Phaser.GameObjects.Text | undefined = $state()
 
   function createMenu(scene: Phaser.Scene) {
-    
+
     let {height, width} = scene.scale
-    
+
     // descends in over 3s
     let headphoneInvader = scene.add.sprite(width / 2, -300, 'textures/headphone-invader');
     headphoneInvader.blendMode = Phaser.BlendModes.ADD;
-    // headphoneInvader.blendMode = Phaser.BlendModes.SCREEN;
     headphoneInvader.anims.create({
       key: 'anims/headphone-invader/default',
       frames: scene.anims.generateFrameNumbers('textures/headphone-invader', {
@@ -248,55 +253,63 @@
       repeat: -1
     })
     headphoneInvader.play( 'anims/headphone-invader/default' )
-    
-    
-    // create(scene)
 
     scene.input.on('pointerdown', () => {
       gameStarted = true
     })
 
-    scene.copyright = scene.add.sprite(0, 0, 'textures/copyright').setOrigin(0),
-    scene.copyright.x = (800 - scene.copyright.width) / 2,
-    scene.copyright.y = 600,
-    scene.copyright.blendMode = Phaser.BlendModes.ADD;
+    const copyright = scene.add.sprite(0, 0, 'textures/copyright').setOrigin(0)
+    copyright.x = (800 - copyright.width) / 2
+    copyright.y = 600
+    copyright.blendMode = Phaser.BlendModes.ADD
+    ;(scene as any).copyright = copyright
 
-    var e = new TimelineMax({
-			onComplete: function() {},
-			onCompleteScope: this
-		});
-
-		scene.time.addEvent({
+    // intro timeline (offsets match the old TimelineMax sequence)
+    scene.time.addEvent({
       delay: 250,
       callback: () => {
-        e.to(headphoneInvader, 3, {
+        scene.tweens.add({
+          targets: headphoneInvader,
           y: height / 2,
-          ease: Quint.easeOut,
-        }, "+=0.0")
-        e.addCallback(() => {
-          scene.juice.pulse( headphoneInvader )
-          scene.juice.flipX( headphoneInvader )
-          scene.juice.wobble( headphoneInvader )
-        }, "-=0.1", null, this),
-        e.to(scene.copyright, 2, {
-          y: 600 - scene.copyright.height - 6,
-          ease: Quint.easeOut
-        }, "+=0.0"),
-        e.addCallback(function() {}, "-=0.1", null, this),
-        e.to(logo, .9, {
+          duration: 3000,
+          ease: 'Quint.easeOut',
+          onComplete: () => {
+            const juice = (scene as any).juice as phaserJuice
+            juice.pulse( headphoneInvader )
+            juice.flipX( headphoneInvader )
+            juice.wobble( headphoneInvader )
+          }
+        })
+        scene.tweens.add({
+          targets: copyright,
+          y: 600 - copyright.height - 6,
+          duration: 2000,
+          delay: 3000,
+          ease: 'Quint.easeOut'
+        })
+        scene.tweens.add({
+          targets: logo,
           y: 75,
-          ease: Quint.easeIn
-        }, "-=0.8"),
-        e.to(logo, .9, {
+          duration: 900,
+          delay: 4200,
+          ease: 'Quint.easeIn'
+        })
+        scene.tweens.add({
+          targets: logo,
           scaleX: 1,
           scaleY: 1,
-          ease: Quint.easeIn
-        }, "-=0.9")
-        e.to(upgradeShipText, 1.4, {
+          duration: 900,
+          delay: 4200,
+          ease: 'Quint.easeIn'
+        })
+        scene.tweens.add({
+          targets: upgradeShipText,
           scaleX: 2,
           scaleY: 2,
-          ease: Quint.easeIn
-        }, "-=0.7")
+          duration: 1400,
+          delay: 4400,
+          ease: 'Quint.easeIn'
+        })
       }
     })
   }
@@ -308,14 +321,15 @@
   width={800}
   height={600}
   physics={{ default: 'arcade' }}
+  input={{ gamepad: true }}
   scale={{ mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH }}
   render={{ pixelArt: true }}
 >
-  <Scene key="main" {preload} {create} let:progress>
-    <slot slot="loading">
+  <Scene key="main" {preload} {create}>
+    {#snippet loading(progress)}
       <LoadingBar x={400} y={300} {progress} />
-    </slot>
-    
+    {/snippet}
+
     {#if !$sceneRestarting}
     <Spawner>
       <Background />
@@ -338,30 +352,30 @@
   physics={{ default: 'arcade' }}
   plugins={{ scene: [{ key: 'phaserJuice', plugin: phaserJuice, mapping: 'juice' }] }}
 >
-  <Scene key="menu" {preload} create={createMenu} let:progress>
-    <slot slot="loading">
+  <Scene key="menu" {preload} create={createMenu}>
+    {#snippet loading(progress)}
       <LoadingBar x={400} y={300} {progress} />
-    </slot>
+    {/snippet}
 
     <Background />
 
-    <Sprite 
+    <Sprite
       bind:instance={logo}
       scale={2}
-      texture='textures/logo' 
-      originX={0} 
-      originY={0} 
+      texture='textures/logo'
+      originX={0}
+      originY={0}
       x={(800 - 537) / 2}
       y={-124}
     />
 
-    <Text 
+    <Text
       bind:instance={upgradeShipText}
       align='center'
       scaleX={-1}
       scaleY={0}
-      originX={0} 
-      originY={0} 
+      originX={0}
+      originY={0}
       x={(800 - 390) / 2}
       y={500}
       fontSize='18px'
@@ -370,6 +384,7 @@
   </Scene>
 </Game>
 {/if}
+
 <style>
   :global(body) {
     background-color: black;

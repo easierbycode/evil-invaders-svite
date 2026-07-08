@@ -1,7 +1,7 @@
 <script lang="ts">
   import { TileSprite, onGameEvent } from 'svelte-phaser'
 
-  let tilePositionY: number = 0
+  let tilePositionY = $state(0)
 
   onGameEvent('step', () => {
     tilePositionY -= 2

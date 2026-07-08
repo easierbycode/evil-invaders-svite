@@ -1,3 +1,4 @@
+import type Phaser from 'phaser'
 
 export function clearObjects(
     scene: Phaser.Scene
@@ -11,8 +12,8 @@ export function clearObjects(
 
         // Check for image or sprite
         if (
-            child.type === 'Image' || 
-            child.type === 'ParticleEmitterManager' ||
+            child.type === 'Image' ||
+            child.type === 'ParticleEmitter' ||
             child.type === 'Sprite' ||
             child.type === 'Text' ||
             child.type === 'TileSprite'
