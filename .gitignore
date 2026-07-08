@@ -1,4 +1,7 @@
+package
+pkg.tgz
 .DS_Store
 node_modules
 public/build
 raw-assets
+dist

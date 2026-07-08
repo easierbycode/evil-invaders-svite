@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type Phaser from 'phaser'
   import { onMount } from 'svelte'
   import {
     Sprite,
@@ -8,21 +9,34 @@
   } from 'svelte-phaser'
   import Explosion from './Explosion.svelte'
 
-  export let name: string
-  export let target: string
-  export let texture: string
-  export let depth = 10
-  export let x: number
-  export let y: number
-  export let velocityX = 0
-  export let velocityY = 0
-  export let onDestroy: () => any
+  interface Props {
+    name: string
+    target: string
+    texture: string
+    depth?: number
+    x: number
+    y: number
+    velocityX?: number
+    velocityY?: number
+    onDestroy: () => void
+  }
 
-  let instance: Phaser.Physics.Arcade.Sprite
-  let destroyed = false
-  let destroyedEnemyType: string
-  let destroyedPosition: { x: number; y: number }
-  let explosionAnimation: string
+  let {
+    name,
+    target,
+    texture,
+    depth = 10,
+    x,
+    y,
+    velocityX = 0,
+    velocityY = 0,
+    onDestroy,
+  }: Props = $props()
+
+  let instance: Phaser.GameObjects.Sprite | undefined = $state()
+  let destroyed = $state(false)
+  let destroyedPosition = $state<{ x: number; y: number }>({ x: 0, y: 0 })
+  let explosionAnimation = $state('')
 
   const scene = getScene()
 
@@ -43,31 +57,31 @@
     animation={explosionAnimation}
     x={destroyedPosition.x}
     y={destroyedPosition.y - 32}
-    on:animationcomplete={() => onDestroy()}
+    onanimationcomplete={() => onDestroy()}
   />
 {:else}
-  <Sprite  
-    animation={name === 'enemyBullet' ? 'anims/enemyBullet/default' : name === 'flirtyGirlBullet' ? 'anims/kissBullet/default' : 'anims/bullet/default'} 
-    bind:instance 
-    {depth} 
-    {name} 
-    {texture} 
-    {x} 
+  <Sprite
+    animation={name === 'enemyBullet' ? 'anims/enemyBullet/default' : name === 'flirtyGirlBullet' ? 'anims/kissBullet/default' : 'anims/bullet/default'}
+    bind:instance
+    {depth}
+    {name}
+    {texture}
+    {x}
     {y}
     scale={name === 'flirtyGirlBullet' ? 0.5 : 1}
   >
     <ArcadeCollider
       with={target}
       overlapOnly
-      on:collide={(e) => {
-        
-        destroyedEnemyType = e.detail.other.texture.key
+      oncollide={({ other }) => {
+
+        const destroyedEnemyType = (other as Phaser.GameObjects.Sprite).texture.key
 
         if ( destroyedEnemyType === 'textures/flirty-girl' )  return onDestroy();
 
         destroyed = true
         explosionAnimation = destroyedEnemyType.replace( 'textures', 'anims' ) + '/explosion'
-        destroyedPosition = { x: instance.x, y: instance.y }
+        destroyedPosition = { x: instance!.x, y: instance!.y }
       }}
     />
     <ArcadePhysics {velocityY} {velocityX} />

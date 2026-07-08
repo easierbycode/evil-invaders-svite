@@ -1,31 +1,25 @@
 <script lang="ts">
   import Phaser from 'phaser'
   import { onMount } from 'svelte'
-  import { ArcadePhysics, getScene, getSpawner } from 'svelte-phaser'
-  import { score, gameStatus, enemiesDefeated, sceneRestarting, currentLevel } from './store'
+  import { getScene, getSpawner } from 'svelte-phaser'
+  import { score, gameStatus, sceneRestarting, currentLevel } from './store'
 
   import Enemy from './Enemy.svelte'
   import Bullet from './Bullet.svelte'
-import { clearObjects } from './clearObjects';
+  import { clearObjects } from './clearObjects'
 
   const scene = getScene()
   const { spawn } = getSpawner()
 
-  let enemies: Array<{ x: number; y: number; key: number, animation: any }> = []
-  let enemyVelocityX = 40
-  let speedMultiplier = 1;
+  let enemies = $state.raw<Array<{ x: number; y: number; key: number; animation: string }>>([])
 
   // gradually increase velocityX by level
   // until it reaches 4x at level 40
-  // let speedMultiplier = ($currentLevel / 40) * 3
-  if ( $currentLevel > 0 ) {
-    // TODO: update this to $currentLevel / 40 once done testing
-    speedMultiplier = 1 + (($currentLevel / 10) * 3)
-  }
+  // TODO: update this to $currentLevel / 40 once done testing
+  const speedMultiplier = $currentLevel > 0 ? 1 + (($currentLevel / 10) * 3) : 1
+  const enemyVelocityX = 40 * speedMultiplier
 
-  enemyVelocityX *= speedMultiplier
-
-  let enemyY = 0
+  let enemyY = $state(0)
 
   // descend every 3 seconds
   const timerConfig = {
@@ -33,11 +27,11 @@ import { clearObjects } from './clearObjects';
       if ($gameStatus === 'playing') {
         enemyY += 16;
 
-        const enemies = scene.children.list.filter(
+        const remaining = scene.children.list.filter(
           (child) => child.name === 'enemy'
         )
 
-        if ( enemies.length <= 20 && moveTimer.delay == 3500 ) {
+        if ( remaining.length <= 20 && moveTimer.delay == 3500 ) {
           let newTimerConfig = {
             callback: timerConfig.callback,
             loop: true,
@@ -47,7 +41,7 @@ import { clearObjects } from './clearObjects';
           moveTimer.reset( newTimerConfig )
         }
 
-        if ( enemies.length <= 10 && moveTimer.delay == 1000 ) {
+        if ( remaining.length <= 10 && moveTimer.delay == 1000 ) {
           let newTimerConfig = {
             callback: timerConfig.callback,
             loop: true,
@@ -73,13 +67,13 @@ import { clearObjects } from './clearObjects';
         const player = scene.children.getByName(
           'player'
         ) as Phaser.Physics.Arcade.Sprite
-        const enemies = scene.children.list.filter(
+        const aliveEnemies = scene.children.list.filter(
           (child) => child.name === 'enemy'
         )
 
         // get the gameobject reference of a random enemy
-        const enemy = enemies[
-          Phaser.Math.RND.integerInRange(0, enemies.length - 1)
+        const enemy = aliveEnemies[
+          Phaser.Math.RND.integerInRange(0, aliveEnemies.length - 1)
         ] as Phaser.Physics.Arcade.Sprite
 
         if (player && enemy) {
@@ -105,7 +99,7 @@ import { clearObjects } from './clearObjects';
             })
 
             enemy.play( 'anims/flirtyGirl/attack' )
-          
+
           } else {
             spawn(Bullet, {
               name: 'enemyBullet',
@@ -135,7 +129,7 @@ import { clearObjects } from './clearObjects';
   let currentLevelEnemies = [
     // level 1
     [ 'anims/enemy/fly', 'anims/flirtyGirl/default' ],
-    
+
     // level 2
     [ 'anims/enemySilver/fly', 'anims/ufo/fly' ],
 
@@ -152,44 +146,49 @@ import { clearObjects } from './clearObjects';
     [ 'anims/flyBrain/fly', 'anims/flirtyGirl/default' ],
   ]
 
+  let hasSpawnedWave = false
 
   // create enemies on game start or reset
-  $: if ($gameStatus === 'playing') {
+  $effect(() => {
+    if ($gameStatus === 'playing') {
 
-    let enemyAnims = currentLevelEnemies[ $currentLevel ] ? currentLevelEnemies[ $currentLevel ] : currentLevelEnemies[ 0 ];
+      let enemyAnims = currentLevelEnemies[ $currentLevel ] ? currentLevelEnemies[ $currentLevel ] : currentLevelEnemies[ 0 ];
 
-    moveTimer.reset(timerConfig)
-    enemyY = 0
+      moveTimer.reset(timerConfig)
+      enemyY = 0
 
-    enemies = Array.from({ length: 40 }).map((_, index) => {
-      const columns = 10
-      const column = index % columns
-      const row = Math.floor(index / columns)
+      hasSpawnedWave = true
 
-      return {
-        x: column * 52,
-        y: row * 41,
-        // we add Date.now() so that all keys are changed between game resets
-        // (if you're curious, remove Date.now() and see what happens when you reset the game)
-        key: index + Date.now(),
-        animation: (index % 2 == 0) ? enemyAnims[0] : enemyAnims[1]
-      }
-    })
-  }
+      enemies = Array.from({ length: 40 }).map((_, index) => {
+        const columns = 10
+        const column = index % columns
+        const row = Math.floor(index / columns)
+
+        return {
+          x: column * 52,
+          y: row * 41,
+          // we add Date.now() so that all keys are changed between game resets
+          // (if you're curious, remove Date.now() and see what happens when you reset the game)
+          key: index + Date.now(),
+          animation: (index % 2 == 0) ? enemyAnims[0] : enemyAnims[1]
+        }
+      })
+    }
+  })
 
   // player wins
-  $: if (enemies.length === 0) {
+  $effect(() => {
+    if (hasSpawnedWave && enemies.length === 0) {
 
-    $sceneRestarting = true
-    
-    // enemiesDefeated.set(true)
+      $sceneRestarting = true
 
-    // kill sprites and their tweens
-    clearObjects( scene );
+      // kill sprites and their tweens
+      clearObjects( scene );
 
-    // launch next level
-    scene.scene.restart({ currentLevel: $currentLevel + 1 })
-  }
+      // launch next level
+      scene.scene.restart({ currentLevel: $currentLevel + 1 })
+    }
+  })
 </script>
 
 {#each enemies as enemy (enemy.key)}
