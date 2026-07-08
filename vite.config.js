@@ -7,5 +7,14 @@ export default defineConfig(({ mode }) => {
   return {
     base: isProduction ? '/evil-invaders-svite/' : '/',
     plugins: [svelte()],
+    build: {
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [{ name: 'phaser', test: /node_modules[\\/]phaser/ }],
+          },
+        },
+      },
+    },
   }
 })
