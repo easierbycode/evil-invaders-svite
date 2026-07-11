@@ -3,9 +3,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.js",
-    "src/**/*.svelte",
-    "packages/svelte-phaser/src/**/*.ts",
-    "packages/svelte-phaser/src/**/*.svelte"
+    "src/**/*.svelte"
   ],
   "exclude": ["node_modules/*", "public/*", "docs/*"],
   "compilerOptions": {
@@ -13,6 +11,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "types": ["svelte", "vite/client"],
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "noEmit": true
   }

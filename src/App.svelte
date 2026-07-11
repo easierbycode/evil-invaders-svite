@@ -1,7 +1,7 @@
 <script lang="ts">
   import Phaser from 'phaser'
   import phaserJuice from './vendor/phaserJuicePlugin.min.js'
-  import { Game, Scene, Sprite, Spawner, Text } from 'svelte-phaser'
+  import { Game, Scene, Sprite, Spawner, Text } from '5velte-ph4ser'
   import LoadingBar from './LoadingBar.svelte'
   import Background from './Background.svelte'
   import Player from './Player.svelte'

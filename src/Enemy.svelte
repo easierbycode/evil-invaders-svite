@@ -1,7 +1,7 @@
 <script lang="ts">
   import Phaser from 'phaser'
   import { onMount } from 'svelte'
-  import { getScene, onGameEvent, Sprite, ArcadePhysics, ArcadeCollider } from 'svelte-phaser'
+  import { getScene, onGameEvent, Sprite, ArcadePhysics, ArcadeCollider } from '5velte-ph4ser'
   import Coin from './Coin.svelte'
 
   const scene = getScene()

@@ -1,6 +1,6 @@
 <script lang="ts">
   import Phaser from 'phaser'
-  import { Rectangle, Container } from 'svelte-phaser'
+  import { Rectangle, Container } from '5velte-ph4ser'
   import { Tween } from 'svelte/motion'
   import { cubicOut } from 'svelte/easing'
 

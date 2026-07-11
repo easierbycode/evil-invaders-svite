@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Sprite } from 'svelte-phaser'
+  import { Sprite } from '5velte-ph4ser'
 
   interface Props {
     x: number

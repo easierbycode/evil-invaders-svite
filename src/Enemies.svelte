@@ -1,7 +1,7 @@
 <script lang="ts">
   import Phaser from 'phaser'
   import { onMount } from 'svelte'
-  import { getScene, getSpawner } from 'svelte-phaser'
+  import { getScene, getSpawner } from '5velte-ph4ser'
   import { score, gameStatus, sceneRestarting, currentLevel } from './store'
 
   import Enemy from './Enemy.svelte'

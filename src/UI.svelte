@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Text, onInputEvent } from 'svelte-phaser'
+  import { Text, onInputEvent } from '5velte-ph4ser'
   import { score, lives, gameStatus, reset, coins, sceneRestarting } from './store'
 
   onInputEvent('pointerdown', () => {

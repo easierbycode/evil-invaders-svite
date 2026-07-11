@@ -7,7 +7,7 @@
     getScene,
     getSpawner,
     onGameEvent,
-  } from 'svelte-phaser'
+  } from '5velte-ph4ser'
   import Bullet from './Bullet.svelte'
   import { gamepad, lives } from './store'
 

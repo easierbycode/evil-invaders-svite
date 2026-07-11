@@ -3,9 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
     "validate": "svelte-check --tsconfig ./tsconfig.json",
     "dev": "vite",
@@ -14,7 +11,7 @@
   "dependencies": {
     "phaser": "4.1.0",
     "svelte": "^5.56.4",
-    "svelte-phaser": "*"
+    "5velte-ph4ser": "^1.0.0"
   },
   "optionalDependencies": {
     "@rolldown/binding-win32-arm64-msvc": "^1.1.4"

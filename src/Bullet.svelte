@@ -6,7 +6,7 @@
     ArcadePhysics,
     ArcadeCollider,
     getScene,
-  } from 'svelte-phaser'
+  } from '5velte-ph4ser'
   import Explosion from './Explosion.svelte'
 
   interface Props {

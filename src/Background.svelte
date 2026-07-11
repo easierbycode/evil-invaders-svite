@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { TileSprite, onGameEvent } from 'svelte-phaser'
+  import { TileSprite, onGameEvent } from '5velte-ph4ser'
 
   let tilePositionY = $state(0)
 
